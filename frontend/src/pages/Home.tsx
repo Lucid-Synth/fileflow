@@ -1,16 +1,9 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useRef, useState } from "react";
-import FileCard from "../components/FileCard";
+import { useNavigate } from "react-router-dom";
 import UploadCard from "../components/UploadCard";
-
-interface UploadedFile {
-  id: string;
-  name: string;
-  size: number;
-  type: string;
-  shareLink: string;
-  uploadDate: Date;
-}
+import ErrorCard from "../components/ErrorCard";
+import apiService, { type UploadedFile } from "../services/api";
 
 type Props = {
   /** diameter in px */
@@ -50,62 +43,80 @@ export default function Home({ size = 200, color = "#303030" }: Props) {
 
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [currentUploadFile, setCurrentUploadFile] = useState<string>("");
   const [showUploadCard, setShowUploadCard] = useState(false);
+  const [showErrorCard, setShowErrorCard] = useState(false);
+  const [errorMessages, setErrorMessages] = useState<string[]>([]);
+  const navigate = useNavigate();
 
-  // Generate a random ID
-  const generateId = () => Math.random().toString(36).substring(2, 15);
 
-  // Handle file selection
+  // Handle file selection with optimized batch upload
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
 
+    const files = Array.from(e.target.files);
+
+    // Validate file sizes before starting upload
+    const validation = apiService.validateFiles(files);
+    if (!validation.isValid) {
+      // Show error messages for invalid files
+      setErrorMessages(validation.errors);
+      setShowErrorCard(true);
+      return;
+    }
+
     setIsUploading(true);
     setUploadProgress(0);
-    const files = Array.from(e.target.files);
-    
-    // Set the first file name for the upload card
-    const displayName = files.length === 1 ? files[0].name : `${files.length} files`;
+
+    // Set the display name for the upload card
+    const displayName =
+      files.length === 1 ? files[0].name : `${files.length} files`;
     setCurrentUploadFile(displayName);
     setShowUploadCard(true);
 
     try {
-      // Simulate upload progress for all files
-      const totalFiles = files.length;
-      let processedFiles = 0;
+      let uploadedFilesData: UploadedFile[] = [];
 
-      const progressInterval = setInterval(() => {
-        const progress = Math.min((processedFiles / totalFiles) * 100, 100);
-        setUploadProgress(progress);
-        if (progress >= 100) {
-          clearInterval(progressInterval);
+      // Use batch upload for multiple files, single upload for one file
+      if (apiService.shouldUseBatchUpload(files)) {
+        // Batch upload - much faster for multiple files
+        setUploadProgress(20); // Show initial progress
+        
+        const batchResult = await apiService.uploadMultipleFiles(files);
+        uploadedFilesData = apiService.createFileDataFromBatch(files, batchResult);
+        
+        // Log results for debugging
+        if (batchResult.failed_count > 0) {
+          console.warn(`${batchResult.failed_count} files failed to upload:`, batchResult.failed_uploads);
         }
-      }, 50);
+        console.log(`Batch upload completed: ${batchResult.successful_count}/${batchResult.total_files} files uploaded successfully`);
+        
+        setUploadProgress(100);
+      } else {
+        // Single file upload
+        const file = files[0];
+        setUploadProgress(50);
+        
+        try {
+          const uploadResult = await apiService.uploadFile(file);
+          const fileData = apiService.createFileData(file, uploadResult);
+          uploadedFilesData.push(fileData);
+        } catch (error) {
+          console.error(`Failed to upload ${file.name}:`, error);
+          // Still create file data even if upload failed, for UI consistency
+          const fileData = apiService.createFileData(file);
+          uploadedFilesData.push(fileData);
+        }
+        
+        setUploadProgress(100);
+      }
 
-      // Process all files from the folder
-      const uploadedFilesData = files.map((file) => ({
-        id: generateId(),
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        shareLink: `https://fileflow.xyz/share/${generateId()}`,
-        uploadDate: new Date(),
-      }));
-
-      // Simulate processing delay
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      processedFiles = totalFiles;
-
-      clearInterval(progressInterval);
-      setUploadProgress(100);
-
-      // Hide upload card and show FileCard
+      // Hide upload card and navigate to upload page
       setTimeout(() => {
         setShowUploadCard(false);
-        setUploadedFiles(uploadedFilesData);
         setIsUploading(false);
         setUploadProgress(0);
+        navigate("/upload", { state: { files: uploadedFilesData } });
       }, 500);
     } catch (error) {
       console.error("Upload failed:", error);
@@ -205,7 +216,7 @@ export default function Home({ size = 200, color = "#303030" }: Props) {
                     ${
                       isUploading
                         ? "opacity-80 cursor-wait"
-                        : "hover:opacity-90"
+                        : "hover:opacity-90 cursor-pointer"
                     }
                     transition-all duration-200 ease-out`}
         style={{
@@ -243,6 +254,19 @@ export default function Home({ size = 200, color = "#303030" }: Props) {
         </span>
       </motion.button>
 
+      {/* File size limit text */}
+      <div
+        className="absolute text-xs text-gray-400 font-medium"
+        style={{
+          left: "calc(50% - 110px)",
+          bottom: "38px",
+          fontSize: "1.7vh",
+          fontWeight: "lighter",
+        }}
+      >
+        Note: Upload files/folder that are less than 49MB
+      </div>
+
       {/* Hidden file input for folders */}
       <input
         type="file"
@@ -255,8 +279,8 @@ export default function Home({ size = 200, color = "#303030" }: Props) {
       {/* Upload Card */}
       <AnimatePresence>
         {showUploadCard && (
-          <UploadCard 
-            filename={currentUploadFile} 
+          <UploadCard
+            filename={currentUploadFile}
             progress={uploadProgress}
             onCancel={() => {
               setShowUploadCard(false);
@@ -267,10 +291,18 @@ export default function Home({ size = 200, color = "#303030" }: Props) {
         )}
       </AnimatePresence>
 
-      {/* File Card Component */}
-      {uploadedFiles.length > 0 && (
-        <FileCard files={uploadedFiles} onClose={() => setUploadedFiles([])} />
-      )}
+      {/* Error Card */}
+      <AnimatePresence>
+        {showErrorCard && (
+          <ErrorCard
+            errors={errorMessages}
+            onClose={() => {
+              setShowErrorCard(false);
+              setErrorMessages([]);
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

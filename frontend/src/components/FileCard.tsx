@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
+import { apiService } from "../services/api";
 
 interface UploadedFile {
   id: string;
@@ -8,6 +9,7 @@ interface UploadedFile {
   type: string;
   shareLink: string;
   uploadDate: Date;
+  shareId?: string;
 }
 
 interface FileCardProps {
@@ -17,9 +19,39 @@ interface FileCardProps {
 
 const FileCard = ({ files, onClose }: FileCardProps) => {
   const [fileList, setFileList] = useState<UploadedFile[]>(files);
+  const [copiedLink, setCopiedLink] = useState<string | null>(null);
+  const [deletingFiles, setDeletingFiles] = useState<Set<string>>(new Set());
 
-  const handleDelete = (fileId: string) => {
-    setFileList((prev: UploadedFile[]) => prev.filter((file: UploadedFile) => file.id !== fileId));
+  const handleDelete = async (fileId: string) => {
+    const file = fileList.find(f => f.id === fileId);
+    if (!file || !file.shareId) {
+      // If no shareId, just remove from local state (fallback for old files)
+      setFileList((prev: UploadedFile[]) => prev.filter((file: UploadedFile) => file.id !== fileId));
+      return;
+    }
+
+    setDeletingFiles(prev => new Set(prev).add(fileId));
+    
+    try {
+      await apiService.deleteFile(file.shareId);
+      setFileList((prev: UploadedFile[]) => prev.filter((file: UploadedFile) => file.id !== fileId));
+    } catch (error) {
+      console.error('Failed to delete file:', error);
+      // You could add a toast notification here
+      alert('Failed to delete file. Please try again.');
+    } finally {
+      setDeletingFiles(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(fileId);
+        return newSet;
+      });
+    }
+  };
+
+  const handleCopyLink = (shareLink: string) => {
+    navigator.clipboard.writeText(shareLink);
+    setCopiedLink(shareLink);
+    setTimeout(() => setCopiedLink(null), 2000);
   };
 
   const formatFileSize = (bytes: number) => {
@@ -52,7 +84,7 @@ const FileCard = ({ files, onClose }: FileCardProps) => {
             </h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors p-1"
+              className="text-gray-400 hover:text-gray-600 transition-colors p-1 cursor-pointer"
             >
               <svg
                 width="18"
@@ -99,20 +131,39 @@ const FileCard = ({ files, onClose }: FileCardProps) => {
                       <div className="flex items-center ml-2">
                         <button
                           onClick={() => handleDelete(file.id)}
-                          className="text-red-500 hover:text-red-600 transition-colors p-1"
-                          title="Delete file"
+                          disabled={deletingFiles.has(file.id)}
+                          className={`transition-colors p-1 ${
+                            deletingFiles.has(file.id)
+                              ? 'text-gray-400 cursor-not-allowed'
+                              : 'text-red-500 hover:text-red-600 cursor-pointer'
+                          }`}
+                          title={deletingFiles.has(file.id) ? 'Deleting...' : 'Delete file'}
                         >
-                          <svg
-                            width="14"
-                            height="14"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                          >
-                            <polyline points="3 6 5 6 21 6"></polyline>
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                          </svg>
+                          {deletingFiles.has(file.id) ? (
+                            <svg
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="1.5"
+                              className="animate-spin"
+                            >
+                              <path d="M21 12a9 9 0 11-6.219-8.56"></path>
+                            </svg>
+                          ) : (
+                            <svg
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="1.5"
+                            >
+                              <polyline points="3 6 5 6 21 6"></polyline>
+                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                          )}
                         </button>
                       </div>
                     </div>
@@ -133,19 +184,57 @@ const FileCard = ({ files, onClose }: FileCardProps) => {
                 <>
                   <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
                     <img
-                      src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://fileflow.xyz"
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(fileList[0]?.shareLink || '')}`}
                       alt="QR Code"
                       className="w-48 h-48 rounded-xl object-contain"
                     />
                   </div>
                   <div className="mt-4 text-center">
                     <h3 className="text-sm font-medium text-gray-700 mb-2">Share via link</h3>
-                    <input
-                      type="text"
-                      readOnly
-                      value="fileflow.xyz/share"
-                      className="w-full px-3 py-2 text-sm border-0 bg-gray-50 rounded-lg text-center text-gray-700"
-                    />
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="text"
+                        readOnly
+                        value={fileList[0]?.shareLink || ''}
+                        className="flex-1 px-3 py-2 text-sm border-0 bg-gray-50 rounded-lg text-center text-gray-700 truncate"
+                      />
+                      <button
+                        onClick={() => handleCopyLink(fileList[0]?.shareLink || '')}
+                        className={`p-2 transition-colors cursor-pointer ${
+                          copiedLink === (fileList[0]?.shareLink || '')
+                            ? 'text-green-600'
+                            : 'text-gray-600 hover:text-blue-600'
+                        }`}
+                        title="Copy link"
+                        disabled={!fileList[0]?.shareLink}
+                      >
+                        {copiedLink === (fileList[0]?.shareLink || '') ? (
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                          >
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                          </svg>
+                        ) : (
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                          >
+                            <rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect>
+                            <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path>
+                          </svg>
+                        )}
+                      </button>
+                    </div>
+                   
                   </div>
                 </>
               ) : (
@@ -157,29 +246,13 @@ const FileCard = ({ files, onClose }: FileCardProps) => {
                       <line x1="9" y1="9" x2="15" y2="15"></line>
                     </svg>
                   </div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-2">QR code can't be generated</h3>
-                  <p className="text-xs text-gray-500">Link can't be generated</p>
+                  <h3 className="text-sm font-medium text-gray-700 mb-2">No files uploaded</h3>
+                  <p className="text-xs text-gray-500">Upload files to generate share links</p>
                 </div>
               )}
             </div>
           </div>
           
-          {fileList.length > 0 && (
-            <div className="px-6 py-1 border-t border-gray-100 flex justify-end">
-              <button
-                onClick={onClose}
-                className="px-6 py-1.5 bg-gray-900 text-white text-sm font-light rounded-full hover:bg-gray-800 transition-colors cursor-pointer"
-              >
-                Done
-              </button>
-            </div>
-          )}
-          
-          {fileList.length === 0 && (
-            <div className="p-6 text-center text-gray-500">
-
-            </div>
-          )}
         </motion.div>
       </motion.div>
     </AnimatePresence>
