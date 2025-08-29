@@ -75,10 +75,10 @@ const FileCard = ({ files, onClose }: FileCardProps) => {
           initial={{ scale: 0.9 }}
           animate={{ scale: 1 }}
           exit={{ scale: 0.9 }}
-          className="bg-white rounded-lg shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden"
+          className="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] sm:max-h-[80vh] overflow-hidden mx-2 sm:mx-4"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex justify-between items-center p-4 border-b border-gray-100">
+          <div className="flex justify-between items-center p-3 sm:p-4 border-b border-gray-100">
             <h2 className="text-sm font-medium text-gray-700 tracking-wide">
               {fileList.length} files
             </h2>
@@ -100,14 +100,14 @@ const FileCard = ({ files, onClose }: FileCardProps) => {
             </button>
           </div>
           
-          <div className="flex">
-            {/* Left Side: File List */}
-            <div className="flex-1 overflow-y-auto max-h-[60vh]">
+          <div className="flex flex-col lg:flex-row">
+            {/* File List Section */}
+            <div className="flex-1 overflow-y-auto max-h-[40vh] sm:max-h-[50vh] lg:max-h-[60vh]">
               {fileList.length > 0 ? (
                 fileList.map((file: UploadedFile) => (
                   <div key={file.id} className="border-b border-gray-100 p-3 hover:bg-gray-50 transition-colors">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3 flex-1">
+                      <div className="flex items-center space-x-3 flex-1 min-w-0">
                         <div className="w-7 h-7 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
                           <svg
                             width="14"
@@ -128,7 +128,7 @@ const FileCard = ({ files, onClose }: FileCardProps) => {
                         </div>
                       </div>
                       
-                      <div className="flex items-center ml-2">
+                      <div className="flex items-center ml-2 flex-shrink-0">
                         <button
                           onClick={() => handleDelete(file.id)}
                           disabled={deletingFiles.has(file.id)}
@@ -170,7 +170,7 @@ const FileCard = ({ files, onClose }: FileCardProps) => {
                   </div>
                 ))
               ) : (
-                <div className="flex-1 flex items-center justify-center">
+                <div className="flex-1 flex items-center justify-center py-8">
                   <div className="text-center text-gray-500">
                     <p className="text-sm">No files remaining</p>
                   </div>
@@ -178,29 +178,29 @@ const FileCard = ({ files, onClose }: FileCardProps) => {
               )}
             </div>
 
-            {/* Right Side: QR Code and Share Link */}
-            <div className="w-64 border-l border-gray-100 p-8 bg-white flex flex-col items-center">
+            {/* QR Code and Share Link Section */}
+            <div className="w-full lg:w-80 border-t lg:border-t-0 lg:border-l border-gray-100 p-4 sm:p-6 lg:p-8 bg-white flex flex-col items-center">
               {fileList.length > 0 ? (
                 <>
-                  <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                  <div className="bg-white rounded-2xl p-3 sm:p-4 shadow-sm border border-gray-100 w-full max-w-xs">
                     <img
                       src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(fileList[0]?.shareLink || '')}`}
                       alt="QR Code"
-                      className="w-48 h-48 rounded-xl object-contain"
+                      className="w-full h-auto aspect-square rounded-xl object-contain"
                     />
                   </div>
-                  <div className="mt-4 text-center">
-                    <h3 className="text-sm font-medium text-gray-700 mb-2">Share via link</h3>
-                    <div className="flex items-center space-x-2">
+                  <div className="mt-4 text-center w-full">
+                    <h3 className="text-sm font-medium text-gray-700 mb-3">Share via link</h3>
+                    <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2 w-full">
                       <input
                         type="text"
                         readOnly
                         value={fileList[0]?.shareLink || ''}
-                        className="flex-1 px-3 py-2 text-sm border-0 bg-gray-50 rounded-lg text-center text-gray-700 truncate"
+                        className="w-full sm:flex-1 px-3 py-2 text-sm border-0 bg-gray-50 rounded-lg text-center text-gray-700 truncate min-w-0"
                       />
                       <button
                         onClick={() => handleCopyLink(fileList[0]?.shareLink || '')}
-                        className={`p-2 transition-colors cursor-pointer ${
+                        className={`p-2 transition-colors cursor-pointer flex-shrink-0 ${
                           copiedLink === (fileList[0]?.shareLink || '')
                             ? 'text-green-600'
                             : 'text-gray-600 hover:text-blue-600'
@@ -229,16 +229,15 @@ const FileCard = ({ files, onClose }: FileCardProps) => {
                             strokeWidth="2"
                           >
                             <rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect>
-                            <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path>
+                            <path d="M4 16c-1.1 0-2-.9-2 2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path>
                           </svg>
                         )}
                       </button>
                     </div>
-                   
                   </div>
                 </>
               ) : (
-                <div className="flex-1 flex flex-col items-center justify-center text-center">
+                <div className="flex-1 flex flex-col items-center justify-center text-center py-8">
                   <div className="text-gray-400 mb-4">
                     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                       <circle cx="12" cy="12" r="10"></circle>

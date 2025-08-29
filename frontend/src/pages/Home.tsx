@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import UploadCard from "../components/UploadCard";
 import ErrorCard from "../components/ErrorCard";
@@ -12,7 +12,7 @@ type Props = {
   color?: string;
 };
 
-export default function Home({ size = 200, color = "#303030" }: Props) {
+export default function Home({ color = "#303030" }: Omit<Props, 'size'>) {
   // Define the 3 animated circles behind the main circle
   const circles = [
     {
@@ -134,15 +134,50 @@ export default function Home({ size = 200, color = "#303030" }: Props) {
     }
   };
 
+  // Responsive circle size based on screen size
+  const getCircleSize = () => {
+    if (typeof window !== 'undefined') {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      const minDimension = Math.min(width, height);
+      
+      // Mobile: smaller circle
+      if (width < 640) {
+        return Math.max(120, Math.min(160, minDimension * 0.35));
+      }
+      // Tablet
+      if (width < 1024) {
+        return Math.max(160, Math.min(200, minDimension * 0.3));
+      }
+      // Desktop
+      return Math.max(200, Math.min(250, minDimension * 0.25));
+    }
+    return 160; // Default fallback
+  };
+
+  const [circleSize, setCircleSize] = useState(getCircleSize());
+
+  // Update circle size on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      setCircleSize(getCircleSize());
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }
+  }, []);
+
   return (
-    <div className="min-h-screen w-full bg-[#181818] flex items-center justify-center relative">
+    <div className="min-h-screen w-full bg-[#181818] flex items-center justify-center relative px-4 sm:px-6 lg:px-8">
       {/* Centered container for circles */}
       <div
         className="absolute left-1/2 top-1/2 flex items-center justify-center"
         style={{
           transform: "translate(-50%, -50%)",
-          width: `${size}px`,
-          height: `${size}px`,
+          width: `${circleSize}px`,
+          height: `${circleSize}px`,
         }}
       >
         {/* Render 3 animated background circles behind the main circle */}
@@ -151,8 +186,8 @@ export default function Home({ size = 200, color = "#303030" }: Props) {
             key={i}
             className="absolute rounded-full"
             style={{
-              width: `${size}px`,
-              height: `${size}px`,
+              width: `${circleSize}px`,
+              height: `${circleSize}px`,
               transform: `translate(-50%, -50%) scale(${c.scale})`,
               background: color,
               opacity: c.opacity,
@@ -171,8 +206,8 @@ export default function Home({ size = 200, color = "#303030" }: Props) {
         <div
           className="absolute rounded-full flex items-center justify-center cursor-pointer hover:brightness-110 transition"
           style={{
-            width: `${size}px`,
-            height: `${size}px`,
+            width: `${circleSize}px`,
+            height: `${circleSize}px`,
             left: "50%",
             top: "50%",
             transform: "translate(-50%, -50%)",
@@ -190,11 +225,15 @@ export default function Home({ size = 200, color = "#303030" }: Props) {
             }
           }}
         >
-          <div className="text-center px-4">
-            <p className="text-white font-bold text-lg leading-tight">
+          <div className="text-center px-2 sm:px-4">
+            <p className={`text-white font-bold leading-tight ${
+              circleSize < 140 ? 'text-sm' : circleSize < 180 ? 'text-base' : 'text-lg'
+            }`}>
               Upload files
               <br />
-              <span className="text-sm opacity-80 font-semibold">
+              <span className={`opacity-80 font-semibold ${
+                circleSize < 140 ? 'text-xs' : 'text-sm'
+              }`}>
                 click here
               </span>
             </p>
@@ -212,7 +251,7 @@ export default function Home({ size = 200, color = "#303030" }: Props) {
 
       {/* Upload folders button at the bottom */}
       <motion.button
-        className={`px-6 py-2.5 rounded-full font-medium text-sm tracking-wide absolute overflow-hidden
+        className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-medium text-xs sm:text-sm tracking-wide absolute overflow-hidden left-1/2 transform -translate-x-1/2
                     ${
                       isUploading
                         ? "opacity-80 cursor-wait"
@@ -223,9 +262,8 @@ export default function Home({ size = 200, color = "#303030" }: Props) {
           background: "#f5f5f5",
           color: "#303030",
           zIndex: 4,
-          left: "calc(50% - 80px)", // Center by offsetting half the width
-          bottom: "80px",
-          minWidth: "160px",
+          bottom: "60px",
+          minWidth: "140px",
           boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
         }}
         onClick={() => {
@@ -237,34 +275,30 @@ export default function Home({ size = 200, color = "#303030" }: Props) {
         }}
         disabled={isUploading}
       >
-        <span className="text-sm opacity-80 font-semibold flex items-center gap-2">
+        <span className="text-xs sm:text-sm opacity-80 font-semibold flex items-center gap-6 sm:gap-2">
           <svg
-            width="16"
-            height="16"
+            width="14"
+            height="14"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
+            className="sm:w-4 sm:h-4"
           >
             <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
           </svg>
-          Upload folders
+          <span className="hidden sm:inline">Upload folders</span>
+          <span className="sm:hidden">Folders</span>
         </span>
       </motion.button>
 
       {/* File size limit text */}
-      <div
-        className="absolute text-xs text-gray-400 font-medium"
-        style={{
-          left: "calc(50% - 110px)",
-          bottom: "38px",
-          fontSize: "1.7vh",
-          fontWeight: "lighter",
-        }}
-      >
-        Note: Upload files/folder that are less than 49MB
+      <div className="absolute text-xs text-gray-400 font-light text-center left-1/2 transform -translate-x-1/2 px-4 max-w-xs sm:max-w-sm" 
+           style={{ bottom: "20px" }}>
+        <span className="hidden sm:inline">Note: Upload files/folder that are less than 49MB</span>
+        <span className="sm:hidden">Max file size: 49MB</span>
       </div>
 
       {/* Hidden file input for folders */}
