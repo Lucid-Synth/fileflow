@@ -30,7 +30,11 @@ class ShareLinkResponse(BaseModel):
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],  # Vite dev server
+    allow_origins=[
+        "http://localhost:5173", 
+        "http://127.0.0.1:5173",  # Vite dev server
+        "https://fileflow-rho.vercel.app"  # Vercel deployment
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -97,7 +101,7 @@ async def upload_single_file(file: UploadFile) -> dict:
 
         # Generate shareable link
         share_id = hashlib.md5(f"{filename}_{uuid.uuid4()}".encode()).hexdigest()[:8]
-        share_url = f"https://fileflow.xyz/share/{share_id}"
+        share_url = f"https://fileflow-rho.vercel.app/download/{share_id}"
         
         # Store mapping
         share_links[share_id] = {
@@ -184,7 +188,7 @@ async def get_share_link(share_id: str):
     
     link_data = share_links[share_id]
     return ShareLinkResponse(
-        share_url=f"https://fileflow.xyz/share/{share_id}",
+        share_url=f"https://fileflow-rho.vercel.app/download/{share_id}",
         original_url=link_data["original_url"],
         filename=link_data["filename"],
         created_at=link_data["created_at"]
