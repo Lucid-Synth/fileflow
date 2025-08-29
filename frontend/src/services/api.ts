@@ -35,6 +35,13 @@ export interface UploadedFile {
   shareId?: string;
 }
 
+export interface SharedFile {
+  share_url: string;
+  original_url: string;
+  filename: string;
+  created_at: string;
+}
+
 class ApiService {
   private baseUrl: string;
 
@@ -194,6 +201,27 @@ class ApiService {
       return result;
     } catch (error) {
       console.error('Delete error:', error);
+      throw error;
+    }
+  }
+
+  async getSharedFile(shareId: string): Promise<SharedFile> {
+    try {
+      const response = await fetch(`${this.baseUrl}/share/${shareId}`, {
+        method: 'GET',
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('File not found or link has expired');
+        }
+        throw new Error(`Failed to load file information: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      console.error('Get shared file error:', error);
       throw error;
     }
   }
