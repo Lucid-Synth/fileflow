@@ -157,7 +157,7 @@ class ApiService {
       name: file.name,
       size: file.size,
       type: file.type,
-      shareLink: uploadResult?.public_url || '',
+      shareLink: uploadResult?.share_url || '',
       uploadDate: new Date(),
       path: uploadResult?.path,
       shareId: uploadResult?.share_id,
