@@ -111,12 +111,19 @@ export default function Home({ color = "#303030" }: Omit<Props, 'size'>) {
         setUploadProgress(100);
       }
 
-      // Hide upload card and navigate to upload page
+      // Hide upload card and navigate to upload page with share ID
       setTimeout(() => {
         setShowUploadCard(false);
         setIsUploading(false);
         setUploadProgress(0);
-        navigate("/upload", { state: { files: uploadedFilesData } });
+        
+        // Use the first file's share ID for navigation if available
+        const firstFileWithShareId = uploadedFilesData.find(file => file.shareId);
+        if (firstFileWithShareId) {
+          navigate(`/upload/${firstFileWithShareId.shareId}`, { state: { files: uploadedFilesData } });
+        } else {
+          navigate("/upload", { state: { files: uploadedFilesData } });
+        }
       }, 500);
     } catch (error) {
       console.error("Upload failed:", error);

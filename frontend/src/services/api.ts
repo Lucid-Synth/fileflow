@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://fileflow-ry6a.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://fileflow-ry6a.onrender.com';
 
 // File size limit (49MB) - matches backend
 const MAX_FILE_SIZE = 49 * 1024 * 1024;
