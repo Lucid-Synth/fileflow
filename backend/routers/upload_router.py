@@ -15,8 +15,6 @@ supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 router = APIRouter()
 
-# Shareable link storage (in production, use database)
-# For Render deployment, use in-memory storage with longer TTL
 share_links = {}
 
 # File size limit (49MB)
@@ -42,8 +40,7 @@ async def upload_single_file(file: UploadFile) -> dict:
         
         if not contents:
             raise HTTPException(status_code=400, detail="empty file")
-
-        # create a unique filename to avoid collisions
+            
         # sanitize filename for Supabase storage (remove/replace special chars)
         import re
         safe_filename = re.sub(r'[^\w\-_.]', '_', file.filename)
@@ -117,7 +114,7 @@ async def upload(file: UploadFile = File(...)):
 @router.post("/upload-multiple")
 async def upload_multiple(files: List[UploadFile] = File(...)):
     """Multiple file upload endpoint with concurrent processing"""
-    if len(files) > 20:  # Limit concurrent uploads
+    if len(files) > 20:
         raise HTTPException(status_code=400, detail="Too many files. Max 20 files per batch")
     
     try:
@@ -133,8 +130,8 @@ async def upload_multiple(files: List[UploadFile] = File(...)):
             *[upload_with_semaphore(file) for file in files],
             return_exceptions=True
         )
+
         
-        # Process results and separate successful uploads from errors
         successful_uploads = []
         failed_uploads = []
         
