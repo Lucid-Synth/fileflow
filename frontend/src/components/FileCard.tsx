@@ -25,7 +25,6 @@ const FileCard = ({ files, onClose }: FileCardProps) => {
   const handleDelete = async (fileId: string) => {
     const file = fileList.find(f => f.id === fileId);
     if (!file || !file.shareId) {
-      // If no shareId, just remove from local state (fallback for old files)
       setFileList((prev: UploadedFile[]) => prev.filter((file: UploadedFile) => file.id !== fileId));
       return;
     }
@@ -37,7 +36,6 @@ const FileCard = ({ files, onClose }: FileCardProps) => {
       setFileList((prev: UploadedFile[]) => prev.filter((file: UploadedFile) => file.id !== fileId));
     } catch (error) {
       console.error('Failed to delete file:', error);
-      // You could add a toast notification here
       alert('Failed to delete file. Please try again.');
     } finally {
       setDeletingFiles(prev => {
