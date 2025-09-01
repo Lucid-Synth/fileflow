@@ -21,7 +21,6 @@ const UploadPage = () => {
     if (location.state?.files) {
       setUploadedFiles(location.state.files);
     } else {
-      // If no files provided, redirect to home
       navigate('/');
     }
   }, [location.state, navigate]);
