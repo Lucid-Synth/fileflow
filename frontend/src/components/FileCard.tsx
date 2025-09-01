@@ -99,7 +99,7 @@ const FileCard = ({ files, onClose }: FileCardProps) => {
           </div>
           
           <div className="flex flex-col lg:flex-row">
-            {/* File List Section */}
+            {/* File List Section*/}
             <div className="flex-1 overflow-y-auto max-h-[40vh] sm:max-h-[50vh] lg:max-h-[60vh]">
               {fileList.length > 0 ? (
                 fileList.map((file: UploadedFile) => (
