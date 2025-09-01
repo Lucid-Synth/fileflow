@@ -21,7 +21,7 @@ export default function ErrorCard({ errors, onClose }: ErrorCardProps) {
         exit={{ scale: 0.9, opacity: 0 }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
+        
         <div className="flex items-center gap-3 mb-4">
           <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center">
             <svg
@@ -42,7 +42,6 @@ export default function ErrorCard({ errors, onClose }: ErrorCardProps) {
           <h3 className="text-white font-semibold text-lg">Upload Error</h3>
         </div>
 
-        {/* Error Messages */}
         <div className="space-y-2 mb-6">
           {errors.map((error, index) => (
             <div
@@ -54,7 +53,6 @@ export default function ErrorCard({ errors, onClose }: ErrorCardProps) {
           ))}
         </div>
 
-        {/* Close Button */}
         <button
           onClick={onClose}
           className="w-full bg-red-500 hover:bg-red-600 text-white font-medium py-2.5 px-4 rounded-lg transition-colors duration-200"
