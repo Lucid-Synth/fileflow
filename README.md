@@ -97,20 +97,42 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
 ```
 fileflow/
-├── backend/                 # FastAPI backend
-│   ├── main.py             # Main application file
-│   ├── requirements.txt    # Python dependencies
-│   └── .env.example       # Environment template
-├── frontend/               # React frontend
-│   ├── src/
-│   │   ├── components/    # Reusable UI components
-│   │   ├── pages/         # Page components
-│   │   ├── services/      # API service layer
-│   │   └── App.tsx        # Main app component
-│   ├── public/            # Static assets
-│   ├── package.json       # Node.js dependencies
-│   └── vite.config.ts     # Vite configuration
-└── README.md              # This file
+├── backend/                
+│   ├── models/             # Database models / Pydantic schemas
+│   ├── routers/            # API route definitions
+│   ├── .env.example        # Backend environment variable template
+│   ├── main.py             # FastAPI entry point
+│   └── requirements.txt    # Python dependencies
+│
+├── frontend/
+│   ├── public/
+│   │   └── icons/          # Static icon assets
+│   └── src/
+│       ├── components/     # Reusable React components
+│       ├── pages/          # Page-level views
+│       ├── services/       # API/service layer (Supabase, etc.)
+│       ├── supabaseClient.ts   # Supabase client setup
+│       ├── vite-env.d.ts       # Vite type declarations
+│       ├── App.tsx             # Main React app component
+│       ├── index.css           # Global styles
+│       └── main.tsx            # App entry point (ReactDOM.createRoot)
+│
+│   ├── eslint.config.js    # ESLint configuration
+│   ├── index.html          # Root HTML template
+│   ├── package.json        # Frontend dependencies
+│   ├── package-lock.json   # Dependency lock file
+│   ├── tsconfig.app.json   # TypeScript config for app
+│   ├── tsconfig.json       # Base TypeScript config
+│   ├── tsconfig.node.json  # TypeScript config for Node
+│   ├── vercel.json         # Deployment config (Vercel)
+│   ├── vite.config.ts      # Vite build tool configuration
+│   ├── README.md           # Frontend-specific docs
+│   └── .gitignore          # Ignore rules
+│
+├── .env.example            # Root-level env template
+├── .gitignore              # Root ignore rules
+└── README.md               # Main project documentation
+
 ```
 
 ## Configuration
