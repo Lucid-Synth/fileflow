@@ -6,14 +6,11 @@ import ErrorCard from "../components/ErrorCard";
 import apiService, { type UploadedFile } from "../services/api";
 
 type Props = {
-  /** diameter in px */
   size?: number;
-  /** circle fill color */
   color?: string;
 };
 
 export default function Home({ color = "#303030" }: Omit<Props, 'size'>) {
-  // Define the 3 animated circles behind the main circle
   const circles = [
     {
       scale: 1.6,
@@ -77,10 +74,9 @@ export default function Home({ color = "#303030" }: Omit<Props, 'size'>) {
     try {
       let uploadedFilesData: UploadedFile[] = [];
 
-      // Use batch upload for multiple files, single upload for one file
       if (apiService.shouldUseBatchUpload(files)) {
         // Batch upload - much faster for multiple files
-        setUploadProgress(20); // Show initial progress
+        setUploadProgress(20); 
         
         const batchResult = await apiService.uploadMultipleFiles(files);
         uploadedFilesData = apiService.createFileDataFromBatch(files, batchResult);
@@ -159,7 +155,7 @@ export default function Home({ color = "#303030" }: Omit<Props, 'size'>) {
       // Desktop
       return Math.max(200, Math.min(250, minDimension * 0.25));
     }
-    return 160; // Default fallback
+    return 160;
   };
 
   const [circleSize, setCircleSize] = useState(getCircleSize());
