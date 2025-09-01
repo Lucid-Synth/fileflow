@@ -15,8 +15,7 @@ supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 router = APIRouter()
 
-# Shareable link storage (in production, use database)
-# For Render deployment, use in-memory storage with longer TTL
+# Shareable link storage
 share_links = {}
 
 # File size limit (49MB)
