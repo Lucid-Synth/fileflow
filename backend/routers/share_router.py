@@ -4,8 +4,7 @@ from models.Model import ShareLinkResponse
 
 router = APIRouter()
 
-# Import shared storage from upload router
-# Note: In production, this should be a proper database
+# Import shared storage from upload route
 from .upload_router import share_links
 
 @router.get("/share/{share_id}")
