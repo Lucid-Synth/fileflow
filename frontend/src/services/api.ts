@@ -176,7 +176,7 @@ class ApiService {
       }
     });
     
-    // Process failed uploads (still create file data for UI consistency)
+    // Ensure file metadata is created regardless of upload outcome to maintain UI consistency
     batchResult.failed_uploads.forEach(failedUpload => {
       const originalFile = files.find(f => f.name === failedUpload.filename);
       if (originalFile) {
