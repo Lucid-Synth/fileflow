@@ -13,8 +13,7 @@ supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 router = APIRouter()
 
-# Import shared storage from upload router
-# Note: In production, this should be a proper database
+
 from .upload_router import share_links
 
 @router.delete("/delete/{share_id}")

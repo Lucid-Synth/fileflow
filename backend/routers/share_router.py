@@ -1,6 +1,8 @@
-from fastapi import APIRouter, HTTPException
-from fastapi.responses import RedirectResponse
+from fastapi import APIRouter, HTTPException, Response
+from fastapi.responses import RedirectResponse, StreamingResponse
 from models.Model import ShareLinkResponse
+import qrcode
+import io
 
 router = APIRouter()
 
@@ -38,3 +40,33 @@ async def redirect_to_file(share_id: str):
         raise HTTPException(status_code=404, detail="File not found")
     
     return RedirectResponse(url=original_url)
+
+@router.get("/qrcode/{share_id}")
+async def generate_qr_code(share_id: str):
+    """Generate a QR code for a share link"""
+    if share_id not in share_links:
+        raise HTTPException(status_code=404, detail="Share link not found")
+    
+    # Get the share URL
+    share_url = f"https://fileflow-rho.vercel.app/download/{share_id}"
+    
+    # Generate QR code
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(share_url)
+    qr.make(fit=True)
+    
+    # Create an image from the QR Code instance
+    img = qr.make_image(fill_color="black", back_color="white")
+    
+    # Save the image to a bytes buffer
+    img_byte_arr = io.BytesIO()
+    img.save(img_byte_arr, format='PNG')
+    img_byte_arr.seek(0)
+    
+    # Return the image as a response
+    return Response(content=img_byte_arr.getvalue(), media_type="image/png")

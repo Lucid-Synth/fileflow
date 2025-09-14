@@ -205,7 +205,7 @@ const DownloadPage = () => {
         className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
       >
         {/* Header */}
-        <div className="bg-green-500 p-6 text-white text-center">
+        <div className="bg-blue-500 p-6 text-white text-center">
           <h1 className="text-xl font-semibold">File Download</h1>
           <p className="text-green-100 text-sm mt-1">Ready to download</p>
         </div>
@@ -213,7 +213,7 @@ const DownloadPage = () => {
         {/* File Info Card */}
         <div className="p-6">
           <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-xl mb-6">
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center text-green-600 flex-shrink-0">
+            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center text-blue-600 flex-shrink-0">
               {getFileIcon(fileData?.filename || "")}
             </div>
             <div className="flex-1 min-w-0">
@@ -233,7 +233,7 @@ const DownloadPage = () => {
             className={`w-full flex items-center justify-center space-x-3 py-4 px-6 rounded-xl font-medium transition-all duration-200 cursor-pointer focus:outline-none ${
               downloading
                 ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                : "bg-green-500 text-white hover:bg-green-600 hover:shadow-lg transform hover:scale-[1.02]"
+                : "bg-blue-500 text-white hover:bg-green-600 hover:shadow-lg transform hover:scale-[1.02]"
             }`}
           >
             {downloading ? (

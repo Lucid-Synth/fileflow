@@ -1,34 +1,11 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import UploadCard from "../components/UploadCard";
 import ErrorCard from "../components/ErrorCard";
 import apiService, { type UploadedFile } from "../services/api";
 
-type Props = {
-  size?: number;
-  color?: string;
-};
-
-export default function Home({ color = "#303030" }: Omit<Props, 'size'>) {
-  const circles = [
-    {
-      scale: 1.6,
-      opacity: 0.28,
-      zIndex: 1,
-    },
-    {
-      scale: 1.35,
-      opacity: 0.32,
-      zIndex: 2,
-    },
-    {
-      scale: 1.18,
-      opacity: 0.4,
-      zIndex: 3,
-    },
-  ];
-
+export default function Home() {
   // Ref for the hidden file input
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
@@ -137,119 +114,79 @@ export default function Home({ color = "#303030" }: Omit<Props, 'size'>) {
     }
   };
 
-  // Responsive circle size based on screen size
-  const getCircleSize = () => {
-    if (typeof window !== 'undefined') {
-      const width = window.innerWidth;
-      const height = window.innerHeight;
-      const minDimension = Math.min(width, height);
-      
-      // Mobile: smaller circle
-      if (width < 640) {
-        return Math.max(120, Math.min(160, minDimension * 0.35));
-      }
-      // Tablet
-      if (width < 1024) {
-        return Math.max(160, Math.min(200, minDimension * 0.3));
-      }
-      // Desktop
-      return Math.max(200, Math.min(250, minDimension * 0.25));
-    }
-    return 160;
-  };
-
-  const [circleSize, setCircleSize] = useState(getCircleSize());
-
-  // Update circle size on window resize
-  useEffect(() => {
-    const handleResize = () => {
-      setCircleSize(getCircleSize());
-    };
-
-    if (typeof window !== 'undefined') {
-      window.addEventListener('resize', handleResize);
-      return () => window.removeEventListener('resize', handleResize);
-    }
-  }, []);
-
   return (
     <div className="min-h-screen w-full bg-[#181818] flex items-center justify-center relative px-4 sm:px-6 lg:px-8">
-      {/* Centered container for circles */}
+      {/* Centered container for upload rectangle */}
       <div
-        className="absolute left-1/2 top-1/2 flex items-center justify-center"
+        className="absolute left-1/2 top-1/2 flex flex-col items-center justify-center p-8"
         style={{
           transform: "translate(-50%, -50%)",
-          width: `${circleSize}px`,
-          height: `${circleSize}px`,
+          width: "min(90vw, 500px)",
+          height: "min(60vh, 300px)",
+          borderRadius: "24px",
+          backgroundColor: "rgba(255, 255, 255, 0.9)",
+          border: "3px dotted #d1d5db",
+          cursor: "pointer",
+          zIndex: 4,
+          transition: "all 0.2s ease",
+          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center"
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.borderColor = '#9ca3af';
+          e.currentTarget.style.boxShadow = '0 6px 8px rgba(0, 0, 0, 0.15)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.borderColor = '#d1d5db';
+          e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+        }}
+        onClick={handleCircleClick}
+        tabIndex={0}
+        role="button"
+        aria-label="Upload file"
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            handleCircleClick();
+          }
         }}
       >
-        {/* Render 3 animated background circles behind the main circle */}
-        {circles.map((c, i) => (
-          <motion.div
-            key={i}
-            className="absolute rounded-full"
-            style={{
-              width: `${circleSize}px`,
-              height: `${circleSize}px`,
-              transform: `translate(-50%, -50%) scale(${c.scale})`,
-              background: color,
-              opacity: c.opacity,
-              zIndex: c.zIndex,
-            }}
-            animate={{ scale: [c.scale, c.scale * 1.12, c.scale] }}
-            transition={{
-              duration: 2.5,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: i * 0.15,
-            }}
-          />
-        ))}
-        {/* Main static circle on top, with icon in the center */}
-        <div
-          className="absolute rounded-full flex items-center justify-center cursor-pointer hover:brightness-110 transition"
-          style={{
-            width: `${circleSize}px`,
-            height: `${circleSize}px`,
-            left: "50%",
-            top: "50%",
-            transform: "translate(-50%, -50%)",
-            background: color,
-            border: "1px solid #2A2A2A",
-            zIndex: 4,
-          }}
-          onClick={handleCircleClick}
-          tabIndex={0}
-          role="button"
-          aria-label="Upload file"
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              handleCircleClick();
-            }
-          }}
-        >
-          <div className="text-center px-2 sm:px-4">
-            <p className={`text-white font-bold leading-tight ${
-              circleSize < 140 ? 'text-sm' : circleSize < 180 ? 'text-base' : 'text-lg'
-            }`}>
-              Upload files
-              <br />
-              <span className={`opacity-80 font-semibold ${
-                circleSize < 140 ? 'text-xs' : 'text-sm'
-              }`}>
-                click here
-              </span>
+        <div className="flex flex-col items-center justify-center w-full h-full">
+          <div className="flex flex-col items-center">
+            <svg
+              width="60"
+              height="60"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-gray-700 mb-6"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            <p className="text-gray-800 font-bold text-2xl mb-2">Upload Files</p>
+            <p className="text-gray-600 text-sm mb-1">
+              Drag and drop files here, or click to browse
+            </p>
+            <p className="text-gray-500 text-xs mt-3">
+              Max file size: 49MB
             </p>
           </div>
-          {/* Hidden file input for files */}
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            className="hidden"
-            multiple
-          />
         </div>
+        {/* Hidden file input for files */}
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          className="hidden"
+          multiple
+        />
       </div>
 
       {/* Upload folders button at the bottom */}

@@ -182,9 +182,14 @@ const FileCard = ({ files, onClose }: FileCardProps) => {
                 <>
                   <div className="bg-white rounded-2xl p-3 sm:p-4 shadow-sm border border-gray-100 w-full max-w-xs">
                     <img
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(fileList[0]?.shareLink || '')}`}
+                      src={`/api/qrcode/${fileList[0]?.shareId || ''}`}
                       alt="QR Code"
                       className="w-full h-auto aspect-square rounded-xl object-contain"
+                      onError={(e) => {
+                        // Fallback to external API if our endpoint fails
+                        const target = e.target as HTMLImageElement;
+                        target.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(fileList[0]?.shareLink || '')}`;
+                      }}
                     />
                   </div>
                   <div className="mt-4 text-center w-full">
